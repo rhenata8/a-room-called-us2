@@ -1,0 +1,318 @@
+
+/* =========================================
+   A ROOM CALLED US
+   VIRTUAL LIVING ROOM
+========================================= */
+
+.roomPage {
+  position: fixed;
+  inset: 0;
+
+  isolation: isolate;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+
+  min-height: 560px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 38%,
+      #fff8f0 0%,
+      #f6e1da 52%,
+      #e4c2bc 100%
+    );
+
+  color: #785b55;
+}
+
+/* =========================================
+   THREE.JS CANVAS
+========================================= */
+
+.sceneLayer {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+}
+
+.sceneLayer :global(.living-room-canvas) {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 100%;
+  min-height: 100%;
+
+  overflow: hidden;
+  outline: none;
+}
+
+.sceneLayer :global(.living-room-canvas canvas) {
+  display: block;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  outline: none;
+}
+
+/* =========================================
+   LIGHT OVERLAY
+========================================= */
+
+.softVignette {
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 247, 241, 0.18) 0%,
+      transparent 20%,
+      transparent 78%,
+      rgba(116, 75, 69, 0.12) 100%
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 54%,
+      rgba(117, 76, 77, 0.11) 100%
+    );
+}
+
+/* =========================================
+   TOP HEADER
+========================================= */
+
+.topbar {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  padding: 26px clamp(22px, 4.2vw, 70px);
+
+  pointer-events: none;
+
+  color: rgba(117, 82, 79, 0.82);
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 3px;
+}
+
+.brand,
+.established {
+  display: block;
+  white-space: nowrap;
+}
+
+/* =========================================
+   ROOM TITLE
+========================================= */
+
+.roomCaption {
+  position: absolute;
+
+  left: clamp(24px, 5vw, 76px);
+  bottom: clamp(66px, 8vh, 104px);
+
+  z-index: 3;
+
+  pointer-events: none;
+
+  text-shadow:
+    0 1px 12px rgba(255, 245, 237, 0.78);
+}
+
+.roomNumber {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #a77d75;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 3px;
+}
+
+.roomCaption h1 {
+  margin: 0;
+
+  color: #76534f;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(25px, 3.2vw, 43px);
+  font-weight: 400;
+
+  line-height: 1.15;
+
+  letter-spacing: -1.4px;
+}
+
+.roomCaption p {
+  margin: 10px 0 0;
+
+  color: #98756e;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(11px, 1.05vw, 14px);
+
+  font-style: italic;
+  letter-spacing: 0.15px;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.footer {
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding:
+    20px
+    clamp(22px, 4.2vw, 70px)
+    22px;
+
+  pointer-events: none;
+
+  color: rgba(117, 82, 79, 0.68);
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 7px;
+  font-weight: 600;
+
+  letter-spacing: 2px;
+}
+
+.cursorHint {
+  color: rgba(117, 82, 79, 0.5);
+  text-align: center;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+  .topbar {
+    padding-top: 22px;
+
+    font-size: 8px;
+    letter-spacing: 2.2px;
+  }
+
+  .roomCaption {
+    bottom: 72px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 640px) {
+  .roomPage {
+    min-height: 560px;
+  }
+
+  .topbar {
+    padding: 19px 18px;
+
+    font-size: 7px;
+    letter-spacing: 1.5px;
+  }
+
+  .roomCaption {
+    left: 20px;
+    bottom: 72px;
+  }
+
+  .roomCaption h1 {
+    font-size: 27px;
+  }
+
+  .footer {
+    gap: 8px;
+
+    padding: 17px 18px 18px;
+
+    font-size: 6px;
+    letter-spacing: 0.9px;
+  }
+
+  .cursorHint {
+    display: none;
+  }
+}
+
+/* =========================================
+   SHORT SCREEN
+========================================= */
+
+@media (max-height: 620px) and (min-width: 641px) {
+  .roomCaption {
+    bottom: 54px;
+  }
+
+  .footer {
+    padding-bottom: 14px;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .softVignette {
+    transition: none;
+  }
+}
