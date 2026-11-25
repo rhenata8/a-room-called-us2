@@ -5,9 +5,29 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { createAvatar, type AvatarKind } from "./Character3D";
+
+type RoomVisitor = {
+  visitorId: string;
+  character: AvatarKind | null;
+  x: number;
+  z: number;
+  rotation: number;
+  lastSeen: number;
+};
+
+type PositionUpdate = {
+  x: number;
+  z: number;
+  rotation: number;
+};
 
 type LivingRoomSceneProps = {
   onReady?: () => void;
+  visitorId?: string | null;
+  selectedCharacter?: AvatarKind | null;
+  visitors?: RoomVisitor[];
+  onPositionChange?: (position: PositionUpdate) => void;
 };
 
 function createCanvasTexture(
@@ -196,13 +216,32 @@ function createArtworkTexture(variant: number) {
 
 export default function LivingRoomScene({
   onReady,
+  visitorId = null,
+  selectedCharacter = null,
+  visitors = [],
+  onPositionChange,
 }: LivingRoomSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const onReadyRef = useRef(onReady);
+  const propsRef = useRef({
+    visitorId,
+    selectedCharacter,
+    visitors,
+    onPositionChange,
+  });
 
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
+
+  useEffect(() => {
+    propsRef.current = {
+      visitorId,
+      selectedCharacter,
+      visitors,
+      onPositionChange,
+    };
+  }, [visitorId, selectedCharacter, visitors, onPositionChange]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -223,7 +262,7 @@ export default function LivingRoomScene({
       100
     );
 
-    camera.position.set(0, 2.8, 7.3);
+    camera.position.set(0, 2.8, 5.7);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -267,9 +306,9 @@ export default function LivingRoomScene({
     controls.enablePan = false;
 
     controls.minDistance = 5.6;
-    controls.maxDistance = 9.6;
+    controls.maxDistance = 6.4;
 
-    controls.minPolarAngle = 0.65;
+    controls.minPolarAngle = 0.98;
     controls.maxPolarAngle = 1.48;
 
     controls.target.set(0, 1.9, 0);
@@ -1629,6 +1668,132 @@ export default function LivingRoomScene({
     );
 
     /* =========================================
+       3D CHARACTERS — TWO SEATS, TWO VISITORS
+    ========================================= */
+
+    const avatarRigs = {
+      boy: createAvatar("boy"),
+      girl: createAvatar("girl"),
+    };
+
+    room.add(avatarRigs.boy.root, avatarRigs.girl.root);
+
+    const seatedPositions: Record<AvatarKind, THREE.Vector3> = {
+      boy: new THREE.Vector3(-0.88, 0, -4.72),
+      girl: new THREE.Vector3(0.88, 0, -4.72),
+    };
+
+    const spawnPositions: Record<AvatarKind, THREE.Vector3> = {
+      boy: new THREE.Vector3(-0.72, 0, -3.45),
+      girl: new THREE.Vector3(0.72, 0, -3.45),
+    };
+
+    avatarRigs.boy.root.position.copy(seatedPositions.boy);
+    avatarRigs.girl.root.position.copy(seatedPositions.girl);
+
+    const movementKeys = new Set<string>([
+      "w",
+      "a",
+      "s",
+      "d",
+      "arrowup",
+      "arrowleft",
+      "arrowdown",
+      "arrowright",
+    ]);
+
+    const pressedKeys = new Set<string>();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (!movementKeys.has(key)) return;
+
+      event.preventDefault();
+      pressedKeys.add(key);
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      pressedKeys.delete(event.key.toLowerCase());
+    };
+
+    const handleWindowBlur = () => {
+      pressedKeys.clear();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleWindowBlur);
+
+    let activeLocalCharacter: AvatarKind | null = null;
+    let localStandProgress = 1;
+    let localVisitorSynced = false;
+
+    const localPosition = new THREE.Vector3();
+    const localStandFrom = new THREE.Vector3();
+    const localTargetPosition = new THREE.Vector3();
+
+    let localRotation = 0;
+    let lastPositionSentAt = 0;
+
+    const isBlockedPosition = (x: number, z: number) => {
+      // Sofa footprint.
+      if (Math.abs(x) < 3.12 && z < -4.02 && z > -5.95) {
+        return true;
+      }
+
+      // Coffee table.
+      if (Math.abs(x) < 1.95 && z > -2.62 && z < -0.62) {
+        return true;
+      }
+
+      // Ottoman.
+      if (Math.hypot(x, z - 2.2) < 1.08) {
+        return true;
+      }
+
+      // Decorative stools.
+      if (Math.hypot(x + 2.85, z - 0.9) < 0.58) {
+        return true;
+      }
+
+      if (Math.hypot(x - 2.95, z - 0.95) < 0.58) {
+        return true;
+      }
+
+      // Armchair.
+      if (Math.hypot((x + 4.15) * 0.88, z + 0.9) < 1.12) {
+        return true;
+      }
+
+      // Bookshelf.
+      if (x > 4.85 && z > -2.7 && z < 0.25) {
+        return true;
+      }
+
+      // Front console and floor lamp.
+      if (Math.abs(x) < 1.95 && z > 4.45) {
+        return true;
+      }
+
+      if (Math.hypot(x - 4.9, z + 4.3) < 0.58) {
+        return true;
+      }
+
+      return false;
+    };
+
+    /* =========================================
        DUST MOTES
     ========================================= */
 
@@ -1679,15 +1844,15 @@ export default function LivingRoomScene({
       if (width < 640) {
         camera.fov = 58;
         controls.minDistance = 5.8;
-        controls.maxDistance = 10.4;
+        controls.maxDistance = 6.4;
       } else if (width < 960) {
         camera.fov = 52;
         controls.minDistance = 5.8;
-        controls.maxDistance = 10;
+        controls.maxDistance = 6.4;
       } else {
         camera.fov = 48;
         controls.minDistance = 5.6;
-        controls.maxDistance = 9.6;
+        controls.maxDistance = 6.4;
       }
 
       camera.updateProjectionMatrix();
@@ -1726,6 +1891,177 @@ export default function LivingRoomScene({
       previousTime = timestamp;
       elapsed += delta;
 
+      /* =========================================
+         CHARACTER PRESENCE & LOCAL MOVEMENT
+      ========================================= */
+
+      const currentProps = propsRef.current;
+      const currentVisitors = currentProps.visitors ?? [];
+      const localVisitor = currentProps.visitorId
+        ? currentVisitors.find(
+            (visitor) => visitor.visitorId === currentProps.visitorId
+          )
+        : undefined;
+
+      const localCharacter =
+        currentProps.selectedCharacter ??
+        localVisitor?.character ??
+        null;
+
+      if (localCharacter !== activeLocalCharacter) {
+        activeLocalCharacter = localCharacter;
+        localVisitorSynced = false;
+
+        if (localCharacter) {
+          localStandFrom.copy(seatedPositions[localCharacter]);
+          localPosition.copy(localStandFrom);
+          localTargetPosition.copy(spawnPositions[localCharacter]);
+          localStandProgress = 0;
+          localRotation = 0;
+        } else {
+          localStandProgress = 1;
+        }
+      }
+
+      if (localCharacter && localVisitor && !localVisitorSynced) {
+        localTargetPosition.set(localVisitor.x, 0, localVisitor.z);
+        localRotation = localVisitor.rotation;
+        localVisitorSynced = true;
+      }
+
+      if (localCharacter && localStandProgress < 1) {
+        localStandProgress = Math.min(
+          1,
+          localStandProgress + delta / 0.72
+        );
+
+        const easedProgress =
+          1 - Math.pow(1 - localStandProgress, 3);
+
+        localPosition.lerpVectors(
+          localStandFrom,
+          localTargetPosition,
+          easedProgress
+        );
+      }
+
+      const forwardInput =
+        (pressedKeys.has("w") || pressedKeys.has("arrowup") ? 1 : 0) -
+        (pressedKeys.has("s") || pressedKeys.has("arrowdown") ? 1 : 0);
+
+      const sideInput =
+        (pressedKeys.has("d") || pressedKeys.has("arrowright") ? 1 : 0) -
+        (pressedKeys.has("a") || pressedKeys.has("arrowleft") ? 1 : 0);
+
+      const localDirection = new THREE.Vector3();
+
+      if (
+        localCharacter &&
+        localStandProgress >= 1 &&
+        (forwardInput !== 0 || sideInput !== 0)
+      ) {
+        const outward = new THREE.Vector3(
+          camera.position.x - controls.target.x,
+          0,
+          camera.position.z - controls.target.z
+        ).normalize();
+
+        const right = new THREE.Vector3()
+          .crossVectors(new THREE.Vector3(0, 1, 0), outward)
+          .normalize();
+
+        localDirection
+          .copy(outward)
+          .multiplyScalar(forwardInput)
+          .add(right.multiplyScalar(sideInput));
+
+        if (localDirection.lengthSq() > 0) {
+          localDirection.normalize();
+
+          const speed = 2.45;
+          const nextX = THREE.MathUtils.clamp(
+            localPosition.x + localDirection.x * speed * delta,
+            -5.65,
+            5.65
+          );
+          const nextZ = THREE.MathUtils.clamp(
+            localPosition.z + localDirection.z * speed * delta,
+            -5.65,
+            5.65
+          );
+
+          if (!isBlockedPosition(nextX, nextZ)) {
+            localPosition.set(nextX, 0, nextZ);
+            localRotation = Math.atan2(localDirection.x, localDirection.z);
+          } else {
+            localDirection.set(0, 0, 0);
+          }
+        }
+      }
+
+      (["boy", "girl"] as AvatarKind[]).forEach((kind) => {
+        const rig = avatarRigs[kind];
+        const visitor = currentVisitors.find(
+          (entry) => entry.character === kind
+        );
+        const isLocal = localCharacter === kind;
+        const isStanding = Boolean(visitor) || isLocal;
+        let moving = false;
+
+        if (isLocal) {
+          rig.root.position.set(localPosition.x, 0, localPosition.z);
+          rig.root.rotation.y = localRotation;
+          moving = localDirection.lengthSq() > 0;
+
+          if (
+            moving &&
+            elapsed - lastPositionSentAt >= 0.11
+          ) {
+            lastPositionSentAt = elapsed;
+            currentProps.onPositionChange?.({
+              x: localPosition.x,
+              z: localPosition.z,
+              rotation: localRotation,
+            });
+          }
+        } else if (visitor) {
+          const targetPosition = new THREE.Vector3(
+            visitor.x,
+            0,
+            visitor.z
+          );
+
+          const distanceBefore = rig.root.position.distanceTo(targetPosition);
+
+          rig.root.position.x = THREE.MathUtils.damp(
+            rig.root.position.x,
+            visitor.x,
+            8,
+            delta
+          );
+
+          rig.root.position.z = THREE.MathUtils.damp(
+            rig.root.position.z,
+            visitor.z,
+            8,
+            delta
+          );
+
+          const angleDifference = Math.atan2(
+            Math.sin(visitor.rotation - rig.root.rotation.y),
+            Math.cos(visitor.rotation - rig.root.rotation.y)
+          );
+
+          rig.root.rotation.y += angleDifference * (1 - Math.exp(-8 * delta));
+          moving = distanceBefore > 0.035;
+        } else {
+          rig.root.position.copy(seatedPositions[kind]);
+          rig.root.rotation.y = 0;
+        }
+
+        rig.update(elapsed, delta, moving, isStanding);
+      });
+
       if (!reducedMotion) {
         swayingPlants.forEach((plant, index) => {
           plant.rotation.z =
@@ -1759,6 +2095,10 @@ export default function LivingRoomScene({
 
       resizeObserver.disconnect();
       controls.dispose();
+
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleWindowBlur);
 
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();

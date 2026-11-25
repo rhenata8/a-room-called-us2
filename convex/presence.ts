@@ -15,12 +15,10 @@ export const joinRoom = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Bersihkan pengunjung yang sudah lama tidak aktif.
+    // Bersihkan pengunjung dan slot yang sudah sangat lama tidak aktif.
     const visitors = await ctx.db
       .query("visitors")
-      .withIndex("by_roomId", (q) =>
-        q.eq("roomId", ROOM_ID)
-      )
+      .withIndex("by_roomId", (q) => q.eq("roomId", ROOM_ID))
       .collect();
 
     for (const visitor of visitors) {
@@ -29,9 +27,7 @@ export const joinRoom = mutation({
       }
     }
 
-    const slots = await ctx.db
-      .query("characterSlots")
-      .collect();
+    const slots = await ctx.db.query("characterSlots").collect();
 
     for (const slot of slots) {
       if (slot.lastSeen < now - CLEANUP_WINDOW) {
@@ -41,19 +37,48 @@ export const joinRoom = mutation({
 
     const existing = await ctx.db
       .query("visitors")
-      .withIndex("by_visitorId", (q) =>
-        q.eq("visitorId", args.visitorId)
-      )
+      .withIndex("by_visitorId", (q) => q.eq("visitorId", args.visitorId))
       .unique();
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        lastSeen: now,
-      });
+      let activeCharacter = existing.character;
+
+      // Jangan hidupkan kembali karakter yang slot-nya sudah dimiliki orang lain.
+      if (activeCharacter) {
+        const slot = await ctx.db
+          .query("characterSlots")
+          .withIndex("by_room_character", (q) =>
+            q
+              .eq("roomId", ROOM_ID)
+              .eq("character", activeCharacter as "boy" | "girl"),
+          )
+          .unique();
+
+        if (slot && slot.visitorId === args.visitorId) {
+          await ctx.db.patch(existing._id, {
+            lastSeen: now,
+          });
+
+          await ctx.db.patch(slot._id, {
+            lastSeen: now,
+          });
+        } else {
+          activeCharacter = null;
+
+          await ctx.db.patch(existing._id, {
+            character: null,
+            lastSeen: now,
+          });
+        }
+      } else {
+        await ctx.db.patch(existing._id, {
+          lastSeen: now,
+        });
+      }
 
       return {
         visitorId: args.visitorId,
-        character: existing.character,
+        character: activeCharacter,
       };
     }
 
@@ -85,9 +110,7 @@ export const heartbeat = mutation({
 
     const visitor = await ctx.db
       .query("visitors")
-      .withIndex("by_visitorId", (q) =>
-        q.eq("visitorId", args.visitorId)
-      )
+      .withIndex("by_visitorId", (q) => q.eq("visitorId", args.visitorId))
       .unique();
 
     if (!visitor) {
@@ -105,29 +128,40 @@ export const heartbeat = mutation({
       return null;
     }
 
-    await ctx.db.patch(visitor._id, {
-      lastSeen: now,
-    });
-
     if (visitor.character) {
       const slot = await ctx.db
         .query("characterSlots")
         .withIndex("by_room_character", (q) =>
           q
             .eq("roomId", ROOM_ID)
-            .eq(
-              "character",
-              visitor.character as "boy" | "girl"
-            )
+            .eq("character", visitor.character as "boy" | "girl"),
         )
         .unique();
 
-      if (slot?.visitorId === args.visitorId) {
-        await ctx.db.patch(slot._id, {
+      // Jika slot sudah berpindah tangan, sesi lama kembali menjadi penonton.
+      if (!slot || slot.visitorId !== args.visitorId) {
+        await ctx.db.patch(visitor._id, {
+          character: null,
           lastSeen: now,
         });
+
+        return null;
       }
+
+      await ctx.db.patch(visitor._id, {
+        lastSeen: now,
+      });
+
+      await ctx.db.patch(slot._id, {
+        lastSeen: now,
+      });
+
+      return null;
     }
+
+    await ctx.db.patch(visitor._id, {
+      lastSeen: now,
+    });
 
     return null;
   },
@@ -141,9 +175,7 @@ export const leaveRoom = mutation({
   handler: async (ctx, args) => {
     const visitor = await ctx.db
       .query("visitors")
-      .withIndex("by_visitorId", (q) =>
-        q.eq("visitorId", args.visitorId)
-      )
+      .withIndex("by_visitorId", (q) => q.eq("visitorId", args.visitorId))
       .unique();
 
     if (!visitor) return null;
@@ -154,14 +186,11 @@ export const leaveRoom = mutation({
         .withIndex("by_room_character", (q) =>
           q
             .eq("roomId", ROOM_ID)
-            .eq(
-              "character",
-              visitor.character as "boy" | "girl"
-            )
+            .eq("character", visitor.character as "boy" | "girl"),
         )
         .unique();
 
-      if (slot?.visitorId === args.visitorId) {
+      if (slot && slot.visitorId === args.visitorId) {
         await ctx.db.delete(slot._id);
       }
     }
@@ -180,16 +209,11 @@ export const getRoomVisitors = query({
 
     const visitors = await ctx.db
       .query("visitors")
-      .withIndex("by_roomId", (q) =>
-        q.eq("roomId", ROOM_ID)
-      )
+      .withIndex("by_roomId", (q) => q.eq("roomId", ROOM_ID))
       .collect();
 
     return visitors
-      .filter(
-        (visitor) =>
-          visitor.lastSeen > now - ONLINE_WINDOW
-      )
+      .filter((visitor) => visitor.lastSeen > now - ONLINE_WINDOW)
       .map((visitor) => ({
         visitorId: visitor.visitorId,
         character: visitor.character,
