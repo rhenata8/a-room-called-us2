@@ -1,5 +1,4 @@
-
-/* A ROOM CALLED US — CHARACTER SELECTION & ROOM OVERLAY */
+/* A ROOM CALLED US — FRONT-FACING ROOM EXPERIENCE */
 
 .experience {
   position: fixed;
@@ -8,15 +7,10 @@
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  min-height: 560px;
+  min-height: 520px;
   overflow: hidden;
   background:
-    radial-gradient(
-      ellipse at 50% 30%,
-      rgba(255, 247, 252, 0.96) 0%,
-      rgba(255, 223, 236, 0.9) 42%,
-      rgba(255, 201, 220, 0.95) 100%
-    ),
+    radial-gradient(ellipse at 50% 30%, rgba(255, 247, 252, 0.96) 0%, rgba(255, 223, 236, 0.9) 42%, rgba(255, 201, 220, 0.95) 100%),
     #ffc8de;
   color: #8f4f74;
 }
@@ -34,18 +28,8 @@
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(
-      180deg,
-      rgba(255, 248, 252, 0.18) 0%,
-      transparent 18%,
-      transparent 76%,
-      rgba(155, 87, 116, 0.12) 100%
-    ),
-    radial-gradient(
-      ellipse at center,
-      transparent 56%,
-      rgba(148, 81, 112, 0.12) 100%
-    );
+    linear-gradient(180deg, rgba(255, 248, 252, 0.18) 0%, transparent 18%, transparent 76%, rgba(155, 87, 116, 0.12) 100%),
+    radial-gradient(ellipse at center, transparent 56%, rgba(148, 81, 112, 0.12) 100%);
 }
 
 .topbar {
@@ -110,6 +94,34 @@
   letter-spacing: 0.15px;
 }
 
+.cameraHint {
+  position: absolute;
+  right: clamp(18px, 4.2vw, 70px);
+  bottom: clamp(78px, 10vh, 112px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px 17px;
+  border: 1px solid rgba(220, 143, 177, 0.42);
+  border-radius: 15px;
+  background: rgba(255, 250, 251, 0.88);
+  box-shadow: 0 12px 34px rgba(153, 77, 112, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #a77b8f;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2px;
+}
+
+.cameraHintLabel {
+  color: #c17b9b;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
 .footer {
   position: absolute;
   right: 0;
@@ -134,286 +146,6 @@
   text-align: center;
 }
 
-/* CHARACTER PICKER */
-
-.selectionPanel {
-  position: absolute;
-  right: clamp(18px, 4.2vw, 70px);
-  bottom: clamp(78px, 10vh, 112px);
-  z-index: 5;
-  width: min(430px, calc(100vw - 36px));
-  padding: 23px;
-  border: 1px solid rgba(220, 143, 177, 0.48);
-  border-radius: 22px;
-  background: rgba(255, 250, 251, 0.94);
-  box-shadow:
-    0 18px 55px rgba(153, 77, 112, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.panelKicker {
-  display: block;
-  color: #c17b9b;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 2.3px;
-}
-
-.selectionPanel h2 {
-  margin: 8px 0 0;
-  color: #81506b;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 27px;
-  font-weight: 400;
-  letter-spacing: -0.6px;
-}
-
-.panelDescription {
-  margin: 7px 0 17px;
-  color: #a77b8f;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.characterChoices {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 11px;
-}
-
-.characterChoice {
-  display: flex;
-  min-width: 0;
-  min-height: 178px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 13px 8px 12px;
-  border: 1px solid #f0c5d7;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #fff7fa 0%, #ffedf4 100%);
-  color: #80536b;
-  cursor: pointer;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    opacity 180ms ease;
-}
-
-.characterChoice:not(:disabled):hover {
-  transform: translateY(-3px);
-  border-color: #df8eaf;
-  box-shadow: 0 8px 22px rgba(190, 105, 145, 0.14);
-}
-
-.characterChoice:focus-visible {
-  outline: 3px solid rgba(208, 111, 154, 0.35);
-  outline-offset: 3px;
-}
-
-.characterChoice:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.avatarIcon {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 104px;
-  margin-bottom: 8px;
-  overflow: hidden;
-  border: 1px solid rgba(237, 221, 221, 0.8);
-  border-radius: 11px;
-  background: #fffdfb;
-  box-shadow: inset 0 0 18px rgba(174, 132, 141, 0.06);
-}
-
-.characterPortrait {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center 38%;
-}
-
-.boyFace,
-.girlFace {
-  position: absolute;
-  top: 9px;
-  left: 18px;
-  z-index: 2;
-  width: 30px;
-  height: 34px;
-  border-radius: 48% 48% 45% 45%;
-  background: #e9b18f;
-  box-shadow: inset 0 -3px 0 rgba(171, 97, 78, 0.08);
-}
-
-.boyHair {
-  position: absolute;
-  top: 3px;
-  left: 15px;
-  z-index: 3;
-  width: 37px;
-  height: 23px;
-  border-radius: 55% 55% 35% 35%;
-  background: #282126;
-  transform: rotate(-5deg);
-}
-
-.boyFace::before,
-.girlFace::before {
-  position: absolute;
-  top: 13px;
-  left: 7px;
-  width: 4px;
-  height: 5px;
-  border-radius: 50%;
-  background: #49332d;
-  box-shadow: 11px 0 0 #49332d;
-  content: "";
-}
-
-.boyFace::after {
-  position: absolute;
-  top: 12px;
-  left: 3px;
-  width: 24px;
-  height: 13px;
-  border: 1.5px solid #34333a;
-  border-radius: 8px;
-  content: "";
-}
-
-.boyShirt {
-  position: absolute;
-  bottom: 0;
-  left: 7px;
-  width: 51px;
-  height: 35px;
-  border-radius: 17px 17px 8px 8px;
-  background: #24242a;
-}
-
-.girlHijab {
-  position: absolute;
-  top: 1px;
-  left: 10px;
-  z-index: 1;
-  width: 46px;
-  height: 54px;
-  border-radius: 48% 48% 38% 38%;
-  background: #e8d8d0;
-  box-shadow: inset 0 -5px 0 rgba(184, 151, 139, 0.16);
-}
-
-.girlFace {
-  top: 13px;
-  left: 20px;
-  z-index: 2;
-  width: 26px;
-  height: 31px;
-}
-
-.girlShirt {
-  position: absolute;
-  bottom: 0;
-  left: 8px;
-  width: 50px;
-  height: 30px;
-  border-radius: 14px 14px 8px 8px;
-  background: repeating-linear-gradient(
-    90deg,
-    #fff8f0 0,
-    #fff8f0 7px,
-    #d8b7a8 7px,
-    #d8b7a8 9px
-  );
-}
-
-.characterName {
-  display: block;
-  color: #80506b;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
-}
-
-.characterDetail {
-  display: block;
-  margin-top: 4px;
-  color: #ad8799;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 9px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.choiceStatus {
-  display: block;
-  margin-top: auto;
-  padding-top: 9px;
-  color: #c06d94;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.connectionStatus,
-.selectionError {
-  margin: 9px 0 0;
-  color: #a66a82;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.selectionError {
-  color: #b74e70;
-}
-
-/* IN-ROOM CONTROL HINT */
-
-.controlPanel {
-  position: absolute;
-  right: clamp(18px, 4.2vw, 70px);
-  bottom: clamp(78px, 10vh, 112px);
-  z-index: 4;
-  display: flex;
-  min-width: 230px;
-  flex-direction: column;
-  gap: 6px;
-  padding: 15px 18px;
-  border: 1px solid rgba(220, 143, 177, 0.42);
-  border-radius: 16px;
-  background: rgba(255, 250, 251, 0.88);
-  box-shadow: 0 12px 34px rgba(153, 77, 112, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.controlPanel strong {
-  color: #81506b;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 400;
-}
-
-.controlHint {
-  color: #a77b8f;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.2px;
-}
-
-/* RESPONSIVE */
-
 @media (max-width: 900px) {
   .topbar {
     padding-top: 22px;
@@ -425,8 +157,7 @@
     bottom: 76px;
   }
 
-  .selectionPanel,
-  .controlPanel {
+  .cameraHint {
     right: 22px;
     bottom: 78px;
   }
@@ -434,7 +165,7 @@
 
 @media (max-width: 640px) {
   .experience {
-    min-height: 560px;
+    min-height: 520px;
   }
 
   .topbar {
@@ -453,47 +184,12 @@
     font-size: 28px;
   }
 
-  .selectionPanel {
+  .cameraHint {
     right: 12px;
     bottom: 64px;
-    width: calc(100vw - 24px);
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  .selectionPanel h2 {
-    font-size: 23px;
-  }
-
-  .panelDescription {
-    margin-bottom: 12px;
-    font-size: 11px;
-  }
-
-  .characterChoice {
-    min-height: 158px;
-    padding: 10px 5px;
-  }
-
-  .avatarIcon {
-    height: 88px;
-    margin-bottom: 6px;
-  }
-
-  .characterDetail {
+    max-width: 190px;
+    padding: 11px 13px;
     font-size: 8px;
-  }
-
-  .choiceStatus {
-    font-size: 8px;
-  }
-
-  .controlPanel {
-    right: 12px;
-    bottom: 64px;
-    min-width: 0;
-    max-width: 205px;
-    padding: 12px 14px;
   }
 
   .footer {
@@ -509,7 +205,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .characterChoice {
-    transition: none;
+  .cameraHint {
+    scroll-behavior: auto;
   }
 }
