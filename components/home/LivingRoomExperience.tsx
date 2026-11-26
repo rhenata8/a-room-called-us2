@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { AvatarKind } from "./Character3D";
@@ -314,12 +315,15 @@ export default function LivingRoomExperience() {
               }
               onClick={() => void handleSelectCharacter("boy")}
             >
-              <span
-                className={`${styles.avatarIcon} ${styles.boyIcon}`}
-              >
-                <span className={styles.boyHair} />
-                <span className={styles.boyFace} />
-                <span className={styles.boyShirt} />
+              <span className={`${styles.avatarIcon} ${styles.boyIcon}`}>
+                <Image
+                  className={styles.characterPortrait}
+                  src="/characters/boy-reference.webp"
+                  alt="3D character wearing a black T-shirt, glasses, and dark trousers"
+                  width={1086}
+                  height={1448}
+                  sizes="(max-width: 640px) 42vw, 190px"
+                />
               </span>
 
               <span className={styles.characterName}>
@@ -327,7 +331,7 @@ export default function LivingRoomExperience() {
               </span>
 
               <span className={styles.characterDetail}>
-                Black tee · round glasses
+                Black tee · round glasses · charcoal trousers
               </span>
 
               <span className={styles.choiceStatus}>
@@ -350,12 +354,15 @@ export default function LivingRoomExperience() {
               }
               onClick={() => void handleSelectCharacter("girl")}
             >
-              <span
-                className={`${styles.avatarIcon} ${styles.girlIcon}`}
-              >
-                <span className={styles.girlHijab} />
-                <span className={styles.girlFace} />
-                <span className={styles.girlShirt} />
+              <span className={`${styles.avatarIcon} ${styles.girlIcon}`}>
+                <Image
+                  className={styles.characterPortrait}
+                  src="/characters/girl-reference.webp"
+                  alt="3D hijabi character wearing a pale striped blouse and taupe trousers"
+                  width={1086}
+                  height={1448}
+                  sizes="(max-width: 640px) 42vw, 190px"
+                />
               </span>
 
               <span className={styles.characterName}>
@@ -363,7 +370,7 @@ export default function LivingRoomExperience() {
               </span>
 
               <span className={styles.characterDetail}>
-                Soft hijab · striped shirt
+                Soft hijab · long striped blouse
               </span>
 
               <span className={styles.choiceStatus}>

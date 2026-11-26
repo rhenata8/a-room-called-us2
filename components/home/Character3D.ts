@@ -390,37 +390,6 @@ function createHijab(head: THREE.Group) {
   addSphere(head, scarfLight, [0, -0.46, 0.275], [0.12, 0.09, 0.035]);
 }
 
-function createArms(
-  root: THREE.Group,
-  sleeveMaterial: THREE.Material,
-  skinMaterial: THREE.Material,
-  stripeMaterial?: THREE.Material,
-) {
-  const arms: THREE.Group[] = [];
-
-  for (const side of [-1, 1]) {
-    const arm = new THREE.Group();
-    arm.position.set(side * 0.405, 0.28, 0);
-    root.add(arm);
-
-    addCapsule(arm, sleeveMaterial, 0.125, 0.31, [0, -0.205, 0]);
-
-    if (stripeMaterial) {
-      addRoundedBox(arm, stripeMaterial, [0.245, 0.095, 0.255], 0.025, [0, -0.36, 0]);
-    }
-
-    const forearm = new THREE.Group();
-    forearm.position.set(0, -0.39, 0);
-    arm.add(forearm);
-    addCapsule(forearm, skinMaterial, 0.088, 0.31, [0, -0.18, 0]);
-    addSphere(forearm, skinMaterial, [0, -0.39, 0.025], [0.095, 0.105, 0.09]);
-
-    arms.push(arm);
-  }
-
-  return arms;
-}
-
 function createBoyArms(
   torso: THREE.Group,
   shirt: THREE.Material,
@@ -462,6 +431,69 @@ function createBoyArms(
 
     const thumb = addCapsule(forearm, skin, 0.021, 0.075, [side * 0.082, -0.39, 0.055]);
     thumb.rotation.z = side * -0.55;
+
+    arms.push(arm);
+  }
+
+  return arms;
+}
+
+function createGirlArms(
+  torso: THREE.Group,
+  blouse: THREE.Material,
+  stripe: THREE.Material,
+  cuff: THREE.Material,
+  skin: THREE.Material,
+) {
+  const arms: THREE.Group[] = [];
+
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Group();
+    arm.position.set(side * 0.405, 0.28, 0);
+    torso.add(arm);
+
+    // Full-length sleeves replace the exposed forearms in the old blocky rig.
+    addCapsule(arm, blouse, 0.112, 0.32, [0, -0.18, 0]);
+    addTube(
+      arm,
+      [
+        new THREE.Vector3(side * -0.055, -0.12, 0.068),
+        new THREE.Vector3(side * -0.07, -0.25, 0.072),
+        new THREE.Vector3(side * -0.065, -0.32, 0.066),
+      ],
+      0.008,
+      stripe,
+    );
+
+    const forearm = new THREE.Group();
+    forearm.name = "girl-forearm";
+    forearm.position.set(0, -0.34, 0);
+    arm.add(forearm);
+    addCapsule(forearm, blouse, 0.09, 0.245, [0, -0.135, 0]);
+
+    const cuffBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.087, 0.092, 0.075, 24),
+      cuff,
+    );
+    cuffBand.position.set(0, -0.282, 0);
+    cuffBand.castShadow = true;
+    forearm.add(cuffBand);
+
+    addSphere(forearm, skin, [0, -0.39, 0.018], [0.078, 0.09, 0.073]);
+
+    // Fine double stitching keeps the cuff readable at room-camera distance.
+    for (const y of [-0.255, -0.3]) {
+      addTube(
+        forearm,
+        [
+          new THREE.Vector3(-0.055, y, 0.067),
+          new THREE.Vector3(0, y - 0.004, 0.09),
+          new THREE.Vector3(0.055, y, 0.067),
+        ],
+        0.004,
+        stripe,
+      );
+    }
 
     arms.push(arm);
   }
@@ -625,6 +657,32 @@ function createGirl(root: THREE.Group) {
   root.add(torso);
   addRoundedBox(torso, blouse, [0.77, 0.81, 0.42], 0.14, [0, 0, 0]);
 
+  // A soft shirt collar and chest pocket echo the reference's button-up blouse.
+  for (const side of [-1, 1]) {
+    const collarShape = new THREE.Shape();
+    collarShape.moveTo(0, 0.02);
+    collarShape.lineTo(side * 0.17, 0.035);
+    collarShape.lineTo(side * 0.105, -0.16);
+    collarShape.lineTo(side * 0.018, -0.095);
+    collarShape.closePath();
+    const collar = new THREE.Mesh(new THREE.ShapeGeometry(collarShape), cuff);
+    collar.position.set(side * 0.025, 0.395, 0.218);
+    collar.castShadow = true;
+    torso.add(collar);
+  }
+
+  addRoundedBox(torso, blouse, [0.16, 0.16, 0.022], 0.012, [-0.22, 0.13, 0.22]);
+  addTube(
+    torso,
+    [
+      new THREE.Vector3(-0.29, 0.19, 0.235),
+      new THREE.Vector3(-0.22, 0.19, 0.237),
+      new THREE.Vector3(-0.15, 0.19, 0.235),
+    ],
+    0.004,
+    stripe,
+  );
+
   for (let index = -5; index <= 5; index += 1) {
     const x = index * 0.061;
     addRoundedBox(torso, stripe, [0.012, 0.66, 0.012], 0.004, [x, -0.015, 0.214]);
@@ -646,7 +704,7 @@ function createGirl(root: THREE.Group) {
   createHijab(head);
   createFace(head, skin, "#684633", false);
 
-  const arms = createArms(torso, blouse, skin, cuff);
+  const arms = createGirlArms(torso, blouse, stripe, cuff, skin);
   const legs = createLegs(root, pants, shoe, sole);
   return { torso, head, arms, legs };
 }
@@ -687,7 +745,27 @@ export function createAvatar(type: AvatarKind): AvatarRig {
       parts.arms.forEach((arm, index) => {
         const side = index === 0 ? -1 : 1;
         arm.rotation.x = moving ? -gait * 0.34 * side : idle * 0.008 * side;
-        arm.rotation.z = side * -0.045;
+        const forearm = arm.children.find(
+          (child) => child.name === "girl-forearm",
+        );
+
+        if (type === "girl") {
+          const walkingBlend = moving ? 1 : 0;
+          arm.rotation.z = THREE.MathUtils.lerp(
+            side * -0.68,
+            side * -0.045,
+            walkingBlend,
+          );
+          if (forearm) {
+            forearm.rotation.z = THREE.MathUtils.lerp(
+              side * -0.55,
+              0,
+              walkingBlend,
+            );
+          }
+        } else {
+          arm.rotation.z = side * -0.045;
+        }
       });
 
       root.position.y = moving ? Math.abs(gait) * 0.025 : idle * 0.004;

@@ -224,9 +224,22 @@
 .avatarIcon {
   position: relative;
   display: block;
-  width: 65px;
-  height: 75px;
+  width: 100%;
+  height: 104px;
   margin-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(237, 221, 221, 0.8);
+  border-radius: 11px;
+  background: #fffdfb;
+  box-shadow: inset 0 0 18px rgba(174, 132, 141, 0.06);
+}
+
+.characterPortrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center 38%;
 }
 
 .boyFace,
@@ -460,6 +473,11 @@
   .characterChoice {
     min-height: 158px;
     padding: 10px 5px;
+  }
+
+  .avatarIcon {
+    height: 88px;
+    margin-bottom: 6px;
   }
 
   .characterDetail {
